@@ -1,5 +1,4 @@
 import datetime
-from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -7,7 +6,6 @@ from django.test import TestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.core.files import File
 
 from image_tagger.serializers import ImageSerializer
 from .models import Image
@@ -36,7 +34,7 @@ class TestImageAPI(TestCase):  # Test the private ingredients api
         images = Image.objects.all().order_by("creation_date")
         serializer = ImageSerializer(images, many=True)
         self.assertEqual(result.status_code, status.HTTP_200_OK)
-        # self.assertEqual(result.data, serializer.data)
+        self.assertEqual(result.data, serializer.data)
 
     def test_search_images_list(self):
         url = "{url}?{filter}={value}".format(
@@ -75,6 +73,7 @@ class TestImageAPI(TestCase):  # Test the private ingredients api
             submitter=self.user,
         )
         x.tags.add("opening", "batsman")
-        print(IMAGES_URL + "1/")
-        result = self.client.patch(IMAGES_URL + "1/", {"tags": ["bowler"]})
-        print(result.data)
+        url_with_user_id = IMAGES_URL + "1/"
+        self.client.patch(url_with_user_id, {"tags": ["bowler"]})
+        result = self.client.get(url_with_user_id)
+        self.assertEqual(result.data[0].get("tags"), ["bowler"])
